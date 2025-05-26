@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  gpt-chat-app-dev:
+    image: gpt2-server
+    container_name: gpt-chat-server-dev
+    ports:
+      - "7137:7137"
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      - NVIDIA_VISIBLE_DEVICES=all
+      - CUDA_VISIBLE_DEVICES=all
+    volumes:
+      # Mount source code for development
+      - ../:/app
+      # Mount model directory to persist downloaded models
+      - gpt_models_dev:/app/model/gpt2
+    restart: unless-stopped
+    networks:
+      - gpt-network-dev
+    # Override command for development with auto-reload
+    command: ["python", "-u", "run_server.py"]
+
+volumes:
+  gpt_models_dev:
+    driver: local
+
+networks:
+  gpt-network-dev:
+    driver: bridge
