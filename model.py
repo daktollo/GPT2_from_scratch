@@ -51,11 +51,13 @@ if __name__ == "__main__":
     model = GPTModel(GPT_CONFIG_124M)
     start_context = "Every effort moves you"
 
-    token_ids = generate_text_simple(
+    token_ids = generate(
         model=model,
         idx=text_to_token_ids(start_context, tokenizer),
-        max_new_tokens=1,
-        context_size=1024
+        max_new_tokens=15,
+        context_size=GPT_CONFIG_124M["context_length"],
+        top_k=25,
+        temperature=1.4
     )
 
     print("Output text:\n", token_ids_to_text(token_ids, tokenizer))
