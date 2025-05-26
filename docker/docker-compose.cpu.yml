@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  gpt-chat-app-cpu:
+    image: gpt2-server-cpu
+    container_name: gpt-chat-server-cpu
+    ports:
+      - "7137:7137"
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7137/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - gpt-network-cpu
+
+networks:
+  gpt-network-cpu:
+    driver: bridge

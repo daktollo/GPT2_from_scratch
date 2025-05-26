@@ -9,6 +9,7 @@ DOCKER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$DOCKER_DIR/.." && pwd)"
 COMPOSE_FILE="$DOCKER_DIR/docker-compose.yml"
 DEV_COMPOSE_FILE="$DOCKER_DIR/docker-compose.dev.yml"
+CPU_COMPOSE_FILE="$DOCKER_DIR/docker-compose.cpu.yml"
 COMPOSE_CMD=""  # Will be set by check_dependencies function
 
 # Colors for output
@@ -71,15 +72,23 @@ check_dependencies() {
 
 # Build the Docker image (creates gpt2-server image)
 build() {
-    print_header "Building Docker Image: gpt2-server"
+    print_header "Building Docker Image: gpt2-server (GPU)"
     cd "$PROJECT_ROOT"
     docker build -f docker/Dockerfile -t gpt2-server .
     print_status "Build completed successfully. Image tagged as 'gpt2-server'"
 }
 
+# Build CPU-only Docker image
+build_cpu() {
+    print_header "Building Docker Image: gpt2-server-cpu (CPU Only)"
+    cd "$PROJECT_ROOT"
+    docker build -f docker/Dockerfile.cpu -t gpt2-server-cpu .
+    print_status "CPU build completed successfully. Image tagged as 'gpt2-server-cpu'"
+}
+
 # Start the application in production mode
 start() {
-    print_header "Starting GPT-2 Chat Server (Production)"
+    print_header "Starting GPT-2 Chat Server (Production - GPU)"
     
     # Check if gpt2-server image exists
     if ! docker images | grep -q "gpt2-server"; then
@@ -93,9 +102,25 @@ start() {
     print_status "Access the application at: http://localhost:7137"
 }
 
+# Start CPU-only application
+start_cpu() {
+    print_header "Starting GPT-2 Chat Server (Production - CPU Only)"
+    
+    # Check if gpt2-server-cpu image exists
+    if ! docker images | grep -q "gpt2-server-cpu"; then
+        print_error "Image 'gpt2-server-cpu' not found. Please build it first using: $0 build-cpu"
+        exit 1
+    fi
+    
+    cd "$PROJECT_ROOT"
+    $COMPOSE_CMD -f "$CPU_COMPOSE_FILE" up -d
+    print_status "CPU application started successfully"
+    print_status "Access the application at: http://localhost:7137"
+}
+
 # Start the application in development mode
 dev() {
-    print_header "Starting GPT-2 Chat Server (Development)"
+    print_header "Starting GPT-2 Chat Server (Development - GPU)"
     
     # Check if gpt2-server image exists
     if ! docker images | grep -q "gpt2-server"; then
@@ -111,8 +136,9 @@ dev() {
 stop() {
     print_header "Stopping GPT-2 Chat Server"
     cd "$PROJECT_ROOT"
-    $COMPOSE_CMD -f "$COMPOSE_FILE" down
+    $COMPOSE_CMD -f "$COMPOSE_FILE" down 2>/dev/null || true
     $COMPOSE_CMD -f "$DEV_COMPOSE_FILE" down 2>/dev/null || true
+    $COMPOSE_CMD -f "$CPU_COMPOSE_FILE" down 2>/dev/null || true
     print_status "Application stopped successfully"
 }
 
@@ -127,7 +153,18 @@ restart() {
 logs() {
     print_header "Viewing Application Logs"
     cd "$PROJECT_ROOT"
-    $COMPOSE_CMD -f "$COMPOSE_FILE" logs -f gpt-chat-app
+    
+    # Check which containers are running and show logs
+    if $COMPOSE_CMD -f "$COMPOSE_FILE" ps | grep -q "Up"; then
+        print_status "Showing GPU container logs..."
+        $COMPOSE_CMD -f "$COMPOSE_FILE" logs -f gpt-chat-app
+    elif $COMPOSE_CMD -f "$CPU_COMPOSE_FILE" ps | grep -q "Up"; then
+        print_status "Showing CPU container logs..."
+        $COMPOSE_CMD -f "$CPU_COMPOSE_FILE" logs -f gpt-chat-app-cpu
+    else
+        print_error "No containers are running. Start the application first."
+        exit 1
+    fi
 }
 
 # Clean up containers and images
@@ -136,8 +173,9 @@ clean() {
     cd "$PROJECT_ROOT"
     
     # Stop and remove containers
-    $COMPOSE_CMD -f "$COMPOSE_FILE" down --remove-orphans
+    $COMPOSE_CMD -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
     $COMPOSE_CMD -f "$DEV_COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
+    $COMPOSE_CMD -f "$CPU_COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
     
     # Remove unused images
     docker image prune -f
@@ -171,14 +209,28 @@ gpu() {
 status() {
     print_header "Application Status"
     cd "$PROJECT_ROOT"
-    $COMPOSE_CMD -f "$COMPOSE_FILE" ps
+    print_status "GPU Containers:"
+    $COMPOSE_CMD -f "$COMPOSE_FILE" ps 2>/dev/null || echo "No GPU containers running"
+    print_status "CPU Containers:"
+    $COMPOSE_CMD -f "$CPU_COMPOSE_FILE" ps 2>/dev/null || echo "No CPU containers running"
 }
 
 # Execute command in container
 shell() {
     print_header "Opening Shell in Container"
     cd "$PROJECT_ROOT"
-    $COMPOSE_CMD -f "$COMPOSE_FILE" exec gpt-chat-app bash
+    
+    # Check which containers are running
+    if $COMPOSE_CMD -f "$COMPOSE_FILE" ps | grep -q "Up"; then
+        print_status "Opening shell in GPU container..."
+        $COMPOSE_CMD -f "$COMPOSE_FILE" exec gpt-chat-app bash
+    elif $COMPOSE_CMD -f "$CPU_COMPOSE_FILE" ps | grep -q "Up"; then
+        print_status "Opening shell in CPU container..."
+        $COMPOSE_CMD -f "$CPU_COMPOSE_FILE" exec gpt-chat-app-cpu bash
+    else
+        print_error "No containers are running. Start the application first."
+        exit 1
+    fi
 }
 
 # Show help
@@ -187,33 +239,44 @@ help() {
     echo ""
     echo "Usage: $0 [command]"
     echo ""
-    echo "Commands:"
-    echo "  build     Build the Docker image and tag it as 'gpt2-server'"
-    echo "  start     Start the application (production mode)"
-    echo "  dev       Start the application (development mode)"
-    echo "  stop      Stop the application"
-    echo "  restart   Restart the application"
-    echo "  logs      View application logs"
-    echo "  status    Show application status"
-    echo "  gpu       Check GPU availability and CUDA status"
-    echo "  shell     Open shell in container"
-    echo "  clean     Clean up Docker resources"
-    echo "  help      Show this help message"
+    echo "GPU Commands (CUDA support):"
+    echo "  build        Build the Docker image with GPU support (gpt2-server)"
+    echo "  start        Start the application (production mode - GPU)"
+    echo "  dev          Start the application (development mode - GPU)"
+    echo ""
+    echo "CPU Commands (Lightweight, no CUDA):"
+    echo "  build-cpu    Build the Docker image with CPU-only support (gpt2-server-cpu)"
+    echo "  start-cpu    Start the application (production mode - CPU only)"
+    echo ""
+    echo "General Commands:"
+    echo "  stop         Stop all running containers"
+    echo "  restart      Restart the GPU application"
+    echo "  logs         View application logs"
+    echo "  status       Show application status"
+    echo "  gpu          Check GPU availability and CUDA status"
+    echo "  shell        Open shell in running container"
+    echo "  clean        Clean up Docker resources"
+    echo "  help         Show this help message"
     echo ""
     echo "Examples:"
-    echo "  $0 build                # Build the gpt2-server image"
-    echo "  $0 start                # Start using pre-built gpt2-server image"
-    echo "  $0 dev                  # Start in development mode"
+    echo "  $0 build                # Build GPU-enabled image"
+    echo "  $0 build-cpu            # Build CPU-only image"
+    echo "  $0 start                # Start GPU version"
+    echo "  $0 start-cpu            # Start CPU version"
+    echo "  $0 dev                  # Start in development mode (GPU)"
     echo "  $0 gpu                  # Check GPU status"
-    echo "  $0 logs                 # View logs"
     echo ""
-    echo "Note: You must build the image first before starting the application."
-    echo "      The image will be tagged as 'gpt2-server' and used by compose files."
+    echo "Note: You must build the appropriate image first before starting the application."
     echo ""
     echo "GPU Requirements:"
     echo "  - NVIDIA GPU with CUDA Compute Capability 3.5+"
     echo "  - NVIDIA Driver 450.80.02+"
     echo "  - NVIDIA Container Toolkit installed"
+    echo ""
+    echo "CPU Version:"
+    echo "  - Lighter weight image (~1.5GB vs ~8GB)"
+    echo "  - No GPU dependencies"
+    echo "  - Suitable for development and light usage"
 }
 
 # Main script logic
@@ -224,8 +287,14 @@ main() {
         build)
             build
             ;;
+        build-cpu)
+            build_cpu
+            ;;
         start)
             start
+            ;;
+        start-cpu)
+            start_cpu
             ;;
         dev)
             dev
