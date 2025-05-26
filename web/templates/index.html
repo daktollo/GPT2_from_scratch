@@ -3,12 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flask App</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <title>GPT-2 Chat Interface</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>Welcome to the Flask App</h1>
-    <p>This is a simple Flask application.</p>
-    <script src="/static/script.js"></script>
+    <div class="chat-app">
+        <header>
+            <h1>🤖 GPT-2 Chat Interface</h1>
+            <p>Chat with your locally running GPT-2 model</p>
+        </header>
+        
+        <div id="chat-container">
+            <div id="chat-messages"></div>
+            <div class="loading" id="loading" style="display: none;">
+                <span>🤔 Thinking...</span>
+            </div>
+        </div>
+        
+        <div class="input-container">
+            <input type="text" id="chat-input" placeholder="Type your message here..." maxlength="500">
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
