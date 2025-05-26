@@ -1,0 +1,56 @@
+# Use Python 3.9 slim base image (no CUDA)
+FROM python:3.9-slim-bullseye
+
+# Set environment variables to avoid interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    wget \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip
+RUN python3 -m pip install --upgrade pip
+
+# Set working directory in container
+WORKDIR /app
+
+# Copy requirements first for better caching
+COPY requirements.txt .
+
+# Create CPU-specific requirements file
+RUN echo "# CPU-only dependencies for GPT-2 implementation" > requirements.cpu.txt && \
+    echo "torch>=2.0.0+cpu --index-url https://download.pytorch.org/whl/cpu" >> requirements.cpu.txt && \
+    echo "torchvision>=0.15.0+cpu --index-url https://download.pytorch.org/whl/cpu" >> requirements.cpu.txt && \
+    echo "torchaudio>=2.0.0+cpu --index-url https://download.pytorch.org/whl/cpu" >> requirements.cpu.txt && \
+    grep -v "^torch" requirements.txt >> requirements.cpu.txt
+
+# Install PyTorch CPU version first
+RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+# Install other Python dependencies
+RUN pip install --no-cache-dir tiktoken numpy tensorflow flask flask-cors transformers safetensors requests tqdm PyYAML
+
+# Copy the entire application
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p model/gpt2/124M
+
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+
+# Expose the port the app runs on
+EXPOSE 7137
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:7137/ || exit 1
+
+# Run the application
+CMD ["python", "run_server.py"]
