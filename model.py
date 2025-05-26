@@ -32,6 +32,11 @@ class GPTModel(nn.Module):
 
 
 if __name__ == "__main__":
+    import tiktoken
+    from utils import *
+    tokenizer = tiktoken.get_encoding("gpt2")
+    torch.manual_seed(123)
+
     GPT_CONFIG_124M = {
     "vocab_size": 50257,    # Vocabulary size
     "context_length": 1024, # Context length
@@ -42,18 +47,15 @@ if __name__ == "__main__":
     "qkv_bias": False       # Query-Key-Value bias
     }
 
-    import tiktoken
-    tokenizer = tiktoken.get_encoding("gpt2")
-    batch = []
-    txt1 = "Every effort moves you"
-    txt2 = "Every day holds a"
-    batch.append(torch.tensor(tokenizer.encode(txt1)))
-    batch.append(torch.tensor(tokenizer.encode(txt2)))
-    batch = torch.stack(batch, dim=0)
-    
-    torch.manual_seed(123)
+
     model = GPTModel(GPT_CONFIG_124M)
-    out = model(batch)
-    print("Input batch:\n", batch)
-    print("\nOutput shape:", out.shape)
-    print(out)
+    start_context = "Every effort moves you"
+
+    token_ids = generate_text_simple(
+        model=model,
+        idx=text_to_token_ids(start_context, tokenizer),
+        max_new_tokens=1,
+        context_size=1024
+    )
+
+    print("Output text:\n", token_ids_to_text(token_ids, tokenizer))
