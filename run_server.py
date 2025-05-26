@@ -3,7 +3,7 @@
 GPT-2 Chat Server
 This script starts the Flask web server for the GPT-2 chat interface.
 """
-
+from settings import *
 import sys
 import os
 sys.path.append(os.path.dirname(__file__))
@@ -15,4 +15,4 @@ if __name__ == '__main__':
     load_gpt_model()
     
     # Start the Flask application
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host=HOST, port=PORT, debug=DEBUG)
