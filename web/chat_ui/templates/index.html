@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPT-2 Chat Interface</title>
+    <title>GPT-2 Chat Interface - Retro Terminal</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -24,6 +24,10 @@
             <input type="text" id="chat-input" placeholder="Type your message here..." maxlength="500">
             <button id="send-button">Send</button>
         </div>
+        
+        <footer class="retro-footer">
+            🕹️ built by @daktollo
+        </footer>
     </div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
