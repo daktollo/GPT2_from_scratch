@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPT-2 Text Completion</title>
+    <title>GPT-2 Text Completion - Retro Terminal</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="completion-app">
         <header>
-            <h1>✍️ GPT-2 Text Completion</h1>
+            <h1>💾 GPT-2 Text Completion</h1>
             <p>Enter text and let GPT-2 complete it for you</p>
         </header>
         
@@ -32,7 +32,7 @@
                     
                     <div class="control-group">
                         <label for="top-k">Top-k:</label>
-                        <input type="number" id="top-k" value="50" min="1" max="100">
+                        <input type="number" id="top-k" value="10" min="1" max="100">
                     </div>
                 </div>
                 
@@ -56,6 +56,10 @@
                 <div id="error-message" class="error" style="display: none;"></div>
             </div>
         </div>
+        
+        <footer class="retro-footer">
+            🕹️ built by @daktollo
+        </footer>
     </div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
