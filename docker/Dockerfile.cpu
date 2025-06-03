@@ -13,10 +13,13 @@ RUN apt-get update && apt-get install -y \
     curl \
     wget \
     git \
+    python3-dev \
+    libhdf5-dev \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip
-RUN pip install --upgrade pip
+# Upgrade pip and setuptools
+RUN pip install --upgrade pip setuptools wheel
 
 # Set working directory inside the container
 WORKDIR /app
@@ -24,16 +27,24 @@ WORKDIR /app
 # Copy only requirements.txt first (for better caching)
 COPY requirements.txt .
 
-# Remove existing torch/tensorflow entries and prepare CPU-only requirements
-RUN echo "# CPU-only base dependencies for ARM64" > requirements.arm64.txt && \
-    grep -vE "^torch|^tensorflow" requirements.txt >> requirements.arm64.txt
+# Install dependencies matching requirements.txt versions for ARM64 compatibility
+# Install NumPy first (foundation for everything else)
+RUN pip install --no-cache-dir "numpy>=1.20.0"
 
-# Install other Python dependencies
-RUN pip install --no-cache-dir -r requirements.arm64.txt
+# Install PyTorch CPU version for ARM64 (use standard index for ARM64)
+RUN pip install --no-cache-dir "torch>=2.0.0"
 
-# Install PyTorch for ARM64 (community build) and TensorFlow CPU
-RUN pip install torch==2.0.1 && \
-    pip install tensorflow==2.11.0
+# Install TensorFlow CPU version matching requirements.txt (use tensorflow-cpu for better ARM64 compatibility)
+RUN pip install --no-cache-dir "tensorflow-cpu>=2.15.0" || pip install --no-cache-dir "tensorflow>=2.15.0"
+
+# Install all remaining dependencies from requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Verify installations work correctly
+RUN python -c "import numpy; print('NumPy version:', numpy.__version__)" && \
+    python -c "import tensorflow as tf; print('TensorFlow version:', tf.__version__)" && \
+    python -c "import torch; print('PyTorch version:', torch.__version__)"
+
 
 # Copy the full application code into container
 COPY . .
