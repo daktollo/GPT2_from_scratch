@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPT-2 Text Completion</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="completion-app">
+        <header>
+            <h1>✍️ GPT-2 Text Completion</h1>
+            <p>Enter text and let GPT-2 complete it for you</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="input-section">
+                <label for="input-text">Enter your text to complete:</label>
+                <textarea id="input-text" placeholder="Start typing your text here..." rows="4"></textarea>
+                
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="max-tokens">Max tokens:</label>
+                        <input type="number" id="max-tokens" value="50" min="1" max="200">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="temperature">Temperature:</label>
+                        <input type="range" id="temperature" min="0.1" max="2.0" step="0.1" value="0.8">
+                        <span id="temperature-value">0.8</span>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="top-k">Top-k:</label>
+                        <input type="number" id="top-k" value="50" min="1" max="100">
+                    </div>
+                </div>
+                
+                <button id="complete-button">Complete Text</button>
+            </div>
+            
+            <div class="output-section">
+                <div class="loading" id="loading" style="display: none;">
+                    <span>🤔 Generating completion...</span>
+                </div>
+                
+                <div id="result-container" style="display: none;">
+                    <h3>Result:</h3>
+                    <div class="result-text">
+                        <span class="original-text" id="original-text"></span>
+                        <span class="completion-text" id="completion-text"></span>
+                    </div>
+                    <button id="copy-button">Copy Full Text</button>
+                </div>
+                
+                <div id="error-message" class="error" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

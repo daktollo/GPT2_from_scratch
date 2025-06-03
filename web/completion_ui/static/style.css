@@ -1,0 +1,264 @@
+/* Text Completion Interface Styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    min-height: 100vh;
+    color: #333;
+    padding: 20px;
+}
+
+.completion-app {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+header {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+header p {
+    opacity: 0.9;
+    font-size: 1.1rem;
+}
+
+.main-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    padding: 40px;
+    min-height: 500px;
+}
+
+.input-section, .output-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-section label {
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+#input-text {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #e8eaed;
+    border-radius: 12px;
+    font-size: 16px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 120px;
+    outline: none;
+    transition: border-color 0.3s ease;
+    margin-bottom: 20px;
+}
+
+#input-text:focus {
+    border-color: #4facfe;
+}
+
+.controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.control-group label {
+    min-width: 100px;
+    font-weight: 500;
+    margin-bottom: 0;
+}
+
+.control-group input[type="number"] {
+    width: 80px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.control-group input[type="range"] {
+    flex: 1;
+    max-width: 150px;
+}
+
+#temperature-value {
+    min-width: 30px;
+    font-weight: 600;
+    color: #4facfe;
+}
+
+#complete-button {
+    padding: 15px 30px;
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#complete-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(79, 172, 254, 0.3);
+}
+
+#complete-button:active {
+    transform: translateY(0);
+}
+
+#complete-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.output-section {
+    border-left: 2px solid #f0f0f0;
+    padding-left: 30px;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+    font-style: italic;
+}
+
+.loading span {
+    animation: pulse 1.5s infinite;
+    font-size: 1.1rem;
+}
+
+#result-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+#result-container h3 {
+    color: #333;
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+}
+
+.result-text {
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border-left: 4px solid #4facfe;
+    line-height: 1.6;
+    font-size: 16px;
+}
+
+.original-text {
+    color: #333;
+    background: rgba(79, 172, 254, 0.1);
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+.completion-text {
+    color: #00796b;
+    font-weight: 500;
+    background: rgba(0, 121, 107, 0.1);
+    padding: 2px 4px;
+    border-radius: 4px;
+    margin-left: 2px;
+}
+
+#copy-button {
+    padding: 10px 20px;
+    background: #00796b;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    align-self: flex-start;
+    transition: background-color 0.3s ease;
+}
+
+#copy-button:hover {
+    background: #00695c;
+}
+
+.error {
+    padding: 15px;
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #ffcdd2;
+    border-radius: 8px;
+    font-style: italic;
+}
+
+/* Animations */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .main-content {
+        grid-template-columns: 1fr;
+        gap: 30px;
+        padding: 20px;
+    }
+    
+    .output-section {
+        border-left: none;
+        border-top: 2px solid #f0f0f0;
+        padding-left: 0;
+        padding-top: 20px;
+    }
+    
+    header h1 {
+        font-size: 2rem;
+    }
+    
+    .controls {
+        padding: 15px;
+    }
+    
+    .control-group {
+        flex-wrap: wrap;
+    }
+}
